@@ -1,30 +1,70 @@
 <!doctype html>
-<html>
+<html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Launch WildGift</title>
+  <style>
+    body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+         font-family:system-ui;background:#0b0f14;color:#fff}
+    button{font-size:16px;padding:14px 18px;border-radius:12px;border:0;cursor:pointer}
+    .hint{opacity:.7;margin-top:10px;text-align:center;font-size:13px;max-width:280px}
+    .box{display:flex;flex-direction:column;gap:10px;align-items:center}
+  </style>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
+  <div class="box">
+    <button id="launch">Launch WildGift</button>
+    <div class="hint">Если автозапуск не сработал — нажми кнопку.</div>
+  </div>
+
 <script>
   const target = "https://t.me/WildGiftRobot?startapp=channel";
-
   const tg = window.Telegram?.WebApp;
-  if (tg) {
+
+  function safeClose() {
+    try { tg?.close?.(); } catch (_) {}
+  }
+
+  function launch() {
+    // Не в Telegram — просто редирект в браузере
+    if (!tg) {
+      location.replace(target);
+      return;
+    }
+
     tg.ready();
 
-    // Открыть “правильный” запуск внутри Telegram
-    if (tg.openTelegramLink) tg.openTelegramLink(target);
-    else if (tg.openLink) tg.openLink(target);
-    else location.replace(target);
+    // Открываем t.me ссылку "правильно"
+    try {
+      if (tg.openTelegramLink) tg.openTelegramLink(target);
+      else if (tg.openLink) tg.openLink(target);
+      else location.replace(target);
+    } catch (e) {
+      location.replace(target);
+    }
 
-    // Закрыть текущий WebView (чтобы не оставалась пустая вкладка)
-    setTimeout(() => tg.close(), 100);
-  } else {
-    // если открыли в обычном браузере
-    location.replace(target);
+    // Закрываем эту “пустую вкладку” ТОЛЬКО когда WebView реально ушёл в фон
+    const onVis = () => {
+      if (document.visibilityState === "hidden") {
+        document.removeEventListener("visibilitychange", onVis);
+        setTimeout(safeClose, 150);
+      }
+    };
+    document.addEventListener("visibilitychange", onVis);
+
+    // Фолбэк: если уже успело уйти в фон — закроем через 2 секунды
+    setTimeout(() => {
+      if (document.visibilityState === "hidden") safeClose();
+      // если НЕ hidden — не закрываем, чтобы не убить запуск; юзер может нажать кнопку
+    }, 2000);
   }
+
+  document.getElementById("launch").addEventListener("click", launch);
+
+  // автопопытка (иногда iOS блокирует без клика — тогда поможет кнопка)
+  setTimeout(launch, 200);
 </script>
 </body>
 </html>
