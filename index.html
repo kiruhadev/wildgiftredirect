@@ -2,26 +2,17 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <style>
-    body {
-      margin: 0;
-     
-      opacity: 1;
-      transition: opacity 0.15s ease;
-    }
-  </style>
+  <title>Redirect</title>
   <script>
     const url = "https://t.me/WildGiftRobot?startapp=channel";
 
+    // Открываем Telegram
     window.location.href = url;
 
-    setTimeout(() => {
-      document.body.style.opacity = "0";
-    }, 50);
-
+    // Плавная пауза перед закрытием
     setTimeout(() => {
       window.close();
-    }, 150);
+    }, 120);
   </script>
 </head>
 <body></body>
